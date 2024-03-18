@@ -8,17 +8,38 @@ class App extends React.Component {
 
     // ### DEFINE THE HEADERS
     const headers = [
-      "Name",
-      "Director",
-      "Release Year",
-      "Length (mins)",
-      "Rating",
+      {
+        title: "Name",
+        accessor: "name",
+        index: 0
+      },
+      {
+        title: "Director",
+        accessor: "director",
+        index: 1
+      },
+      {
+        title: "Release Year",
+        accessor: "release",
+        index: 2
+      },
+      {
+        title: "Length (mins)",
+        accessor: "length",
+        index: 3
+      },
+      {
+        title: "Rating ",
+        accessor: "rating",
+        index: 4
+      }
     ];
 
     // ### DEFINE LIST OF OBJECTS, WITH DATA FOR EACH HEADER
     const data = [
       {
         name: "Inception",
+        index: 0,
         director: "Christopher Nolan",
         releaseYear: 2010,
         length: 148,
@@ -26,6 +47,7 @@ class App extends React.Component {
       },
       {
         name: "The Shawshank Redemption",
+        index: 1,
         director: "Frank Darabont",
         releaseYear: 1994,
         length: 142,
@@ -33,6 +55,7 @@ class App extends React.Component {
       },
       {
         name: "The Dark Knight",
+        index: 2,
         director: "Christopher Nolan",
         releaseYear: 2008,
         length: 152,
@@ -40,6 +63,7 @@ class App extends React.Component {
       },
       {
         name: "Pulp Fiction",
+        index: 3,
         director: "Quentin Tarantino",
         releaseYear: 1994,
         length: 154,
@@ -47,6 +71,7 @@ class App extends React.Component {
       },
       {
         name: "Forrest Gump",
+        index: 4,
         director: "Robert Zemeckis",
         releaseYear: 1994,
         length: 142,
@@ -54,6 +79,7 @@ class App extends React.Component {
       },
       {
         name: "The Godfather",
+        index: 5,
         director: "Francis Ford Coppola",
         releaseYear: 1972,
         length: 175,
@@ -61,6 +87,7 @@ class App extends React.Component {
       },
       {
         name: "Schindler's List",
+        index: 6,
         director: "Steven Spielberg",
         releaseYear: 1993,
         length: 195,
@@ -68,6 +95,7 @@ class App extends React.Component {
       },
       {
         name: "The Lord of the Rings: The Return of the King",
+        index: 7,
         director: "Peter Jackson",
         releaseYear: 2003,
         length: 201,
@@ -75,6 +103,7 @@ class App extends React.Component {
       },
       {
         name: "The Matrix",
+        index: 8,
         director: "The Wachowskis",
         releaseYear: 1999,
         length: 136,
@@ -82,6 +111,7 @@ class App extends React.Component {
       },
       {
         name: "The Silence of the Lambs",
+        index: 9,
         director: "Jonathan Demme",
         releaseYear: 1991,
         length: 118,
@@ -89,6 +119,7 @@ class App extends React.Component {
       },
       {
         name: "Inglourious Basterds",
+        index: 10,
         director: "Quentin Tarantino",
         releaseYear: 2009,
         length: 153,
@@ -96,6 +127,7 @@ class App extends React.Component {
       },
       {
         name: "Fight Club",
+        index: 11,
         director: "David Fincher",
         releaseYear: 1999,
         length: 139,
@@ -103,6 +135,7 @@ class App extends React.Component {
       },
       {
         name: "The Green Mile",
+        index: 12,
         director: "Frank Darabont",
         releaseYear: 1999,
         length: 189,
@@ -110,6 +143,7 @@ class App extends React.Component {
       },
       {
         name: "The Departed",
+        index: 13,
         director: "Martin Scorsese",
         releaseYear: 2006,
         length: 151,
@@ -117,6 +151,7 @@ class App extends React.Component {
       },
       {
         name: "Goodfellas",
+        index: 14,
         director: "Martin Scorsese",
         releaseYear: 1990,
         length: 146,
@@ -124,6 +159,7 @@ class App extends React.Component {
       },
       {
         name: "The Shawshank Redemption",
+        index: 15,
         director: "Frank Darabont",
         releaseYear: 1994,
         length: 142,
@@ -131,6 +167,7 @@ class App extends React.Component {
       },
       {
         name: "Gladiator",
+        index: 16,
         director: "Ridley Scott",
         releaseYear: 2000,
         length: 155,
@@ -138,6 +175,7 @@ class App extends React.Component {
       },
       {
         name: "The Prestige",
+        index: 17,
         director: "Christopher Nolan",
         releaseYear: 2006,
         length: 130,
@@ -145,6 +183,7 @@ class App extends React.Component {
       },
       {
         name: "The Usual Suspects",
+        index: 18,
         director: "Bryan Singer",
         releaseYear: 1995,
         length: 106,
@@ -152,6 +191,7 @@ class App extends React.Component {
       },
       {
         name: "Saving Private Ryan",
+        index: 19,
         director: "Steven Spielberg",
         releaseYear: 1998,
         length: 169,
@@ -166,6 +206,43 @@ class App extends React.Component {
     };
   }
 
+  onDragStart = (e, i) => {
+    e.dataTransfer.setData('text/plain', i)
+  };
+
+  onDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  onDragDrop = (e, target) => {
+    e.preventDefault();
+    let src = e.dataTransfer.getData('text/plain');
+    let headers = [...this.state.headers];
+    let srcHdr = headers[src];
+    let trgtHdr = headers[target];
+    let currentIndex = srcHdr.index;
+    srcHdr.index = trgtHdr.index;
+    trgtHdr.index = currentIndex;
+    headers.sort((a, b) => a.index - b.index);
+
+    let newData = this.state.data.map((item)=>{
+      const keysArray = Object.keys(item);
+      let currentTDIndex = keysArray[currentIndex];
+      keysArray[src] = keysArray[target];
+      keysArray[target] = currentTDIndex;
+      /*const newItem = keysArray.reduce((acc, [key, value]) => {
+        acc[key] = value;
+        return acc;
+      }, {});*/
+      //return newItem;
+    });
+
+    this.setState({
+      headers: headers,
+      //data: newData
+    })
+  };
+
   // ### PASS AS PROPS INTO COMPONENT
   render() {
     return (
@@ -178,6 +255,9 @@ class App extends React.Component {
             <DynamicUITable
               headers={this.state.headers}
               data={this.state.data}
+              onDragStart={this.onDragStart}
+              onDragOver={this.onDragOver}
+              onDragDrop={this.onDragDrop}
             />
           </div>
         </main>

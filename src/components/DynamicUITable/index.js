@@ -1,44 +1,80 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import "./dynamic-ui-table.css";
 
-export default class DynamicUITable extends React.Component {
-  // ### COMPONENT EXPECTS HEADERS AND DATA COLUMNS TO POPULATE ROW AND TD DATA IN TABLE
-  constructor(props) {
-    super(props);
-    this.state = {
-      headers: props.headers || [],
-      data: props.data || [],
-    };
-  }
+export default function DynamicUITable(props) {
 
-  render() {
-    return <div className="dynamic-ui-table-outer">{createTable(this.state.headers, this.state.data)}</div>;
-  }
+  const onDragStart = (e, index) => {
+    props.onDragStart(e, index)
+  };
+
+  const onDragOver = (e) => {
+    props.onDragOver(e)
+  };
+
+  const onDragDrop = (e, index) => {
+    props.onDragDrop(e, index)
+  };
+
+    return <div className="dynamic-ui-table-outer">
+        <CreateTable 
+          headers={props.headers} 
+          data={props.data}
+          onDragStart={onDragStart}
+          onDragOver={onDragOver}
+          onDragDrop={onDragDrop}
+        />
+      </div>;
+  
 }
 
-function createTable(headers, data) {
+function CreateTable(props) {
+
+  const onDragStart = (e, index) => {
+    props.onDragStart(e, index)
+  };
+  const onDragOver = (e) => {
+    props.onDragOver(e)
+  };
+  const onDragDrop = (e, index) => {
+    props.onDragDrop(e, index)
+  };
+
+  let headers = props.headers;
+  let data = props.data;
+
+  const keysToOmit = ['index']; 
   return (
     <table className="dynamic-ui-table">
       <thead>
         <tr>
-          {Object.keys(headers).map((key, index) => (
-            <th key={index}>
-              <strong>{headers[key]}</strong>
+          {headers.map((hdr) => (
+            <th key={hdr.title + "hdr"}
+              onDragStart={(e)=> onDragStart(e, hdr.index)} 
+              onDragOver={(e) => onDragOver(e)} 
+              onDrop={(e)=> onDragDrop(e, hdr.index)}
+              index={hdr.index} 
+           >
+              <span draggable><strong>{hdr.title}</strong></span>
             </th>
           ))}
         </tr>
       </thead>
       <tbody className="dynamic-ui-table-inner">
-          {data.map((item, index) => (
-            <tr>
-              {Object.keys(item).map((key, index) => (
-                <td key={index}>
-                  <p>{item[key]}</p>
+          {data.map((item) => {
+            let { index, ...newObj } = item;
+            return (
+              <tr key={item.index + "-tr"}>
+              {
+                  Object.keys(newObj).map((key) => (
+                  <td key={item[key] + "-" + item.index} 
+                  index={item.index}
+                >
+                  <span><p>{item[key]}</p></span>
                 </td>
               ))}
             </tr>
-          ))}
+            )
+        })}
       </tbody>
     </table>
   );
