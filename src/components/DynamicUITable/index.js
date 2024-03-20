@@ -5,6 +5,7 @@ import "./dynamic-ui-table.css";
 export default function DynamicUITable(props) {
   const [headers, updateHeaders] = useState(props.headers || []);
   const [data, updateData] = useState(props.data || []);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   // ### DRAGGABLE FUNCTIONS
   const onDragStart = (e, i) => {
@@ -13,6 +14,7 @@ export default function DynamicUITable(props) {
 
   const onDragOver = (e) => {
     e.preventDefault();
+    setIsDraggingOver(true);
   };
 
   const onDragDrop = (e, target) => {
@@ -26,6 +28,7 @@ export default function DynamicUITable(props) {
     trgtHdr.index = currentIndex;
     newHeaders.sort((a, b) => a.index - b.index);
     updateHeaders(newHeaders);
+    setIsDraggingOver(false);
   };
 
   // ### RENDER TABLE TO UI
@@ -37,6 +40,7 @@ export default function DynamicUITable(props) {
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDragDrop={onDragDrop}
+        isDraggingOver={isDraggingOver}
       />
     </div>
   );
@@ -55,9 +59,16 @@ function CreateTable(props) {
 
   let headers = props.headers;
   let data = props.data;
+  let isDraggingOver = props.isDraggingOver;
+  let dragOverStyle = {
+    border: '2px dashed #ccc',
+    padding: '20px',
+    backgroundColor: isDraggingOver ? '#f0f0f0' : 'transparent', // Apply background color when dragging over
+  }
 
   const keysToOmit = ["index"];
   return (
+    <>
     <table className="dynamic-ui-table">
       <thead>
         <tr>
@@ -68,6 +79,7 @@ function CreateTable(props) {
               onDragOver={(e) => onDragOver(e)}
               onDrop={(e) => onDragDrop(e, hdr.index)}
               index={hdr.index}
+              style={dragOverStyle}
             >
               <span draggable>
                 <strong>{hdr.title}</strong>
@@ -85,6 +97,7 @@ function CreateTable(props) {
                 <td
                   key={item[hdr.accessor] + "-" + item.index}
                   index={item.index}
+                  style={dragOverStyle}
                 >
                   <span>
                     <p>{item[hdr.accessor]}</p>
@@ -96,5 +109,6 @@ function CreateTable(props) {
         })}
       </tbody>
     </table>
+    </>
   );
 }
