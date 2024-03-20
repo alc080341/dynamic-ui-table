@@ -15,6 +15,7 @@ th {
 
 th span {
   width: 100%;
+  display: block;
 }
 
 /* Styles for table rows */

@@ -6,6 +6,8 @@ class App extends React.Component {
   constructor(props) {
     super(props);
 
+    // ### SAMPLE DATA
+
     // ### DEFINE THE HEADERS
     const headers = [
       {
@@ -20,7 +22,7 @@ class App extends React.Component {
       },
       {
         title: "Release Year",
-        accessor: "release",
+        accessor: "releaseYear",
         index: 2
       },
       {
@@ -35,10 +37,14 @@ class App extends React.Component {
       }
     ];
 
-    // ### DEFINE LIST OF OBJECTS, WITH DATA FOR EACH HEADER
+    // ### DEFINE LIST OF OBJECTS, WITH DATA FOR EACH HEADER COLUMNS. EACH OBJECT DEFINES A ROW OF DATA
     const data = [
       {
+        // ### EACH OBJECT MUST HAVE A REFERENCE TO THE ACCESSOR IN THE HEADERS ABOVE - THIS DICTATES WHICH COLUMN THE DATA IS ADDED IN THE ROW
         name: "Inception",
+      
+        // ### INDEX IS USED TO ADD DISTINCT REFERENCE TO THE TABLE ROW. IDEALLY THIS WOULD BE A GUID IF COMING FROM DATABASE
+        // HOWEVER, THIS IS JUST EXAMPLE
         index: 0,
         director: "Christopher Nolan",
         releaseYear: 2010,
@@ -206,43 +212,6 @@ class App extends React.Component {
     };
   }
 
-  onDragStart = (e, i) => {
-    e.dataTransfer.setData('text/plain', i)
-  };
-
-  onDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  onDragDrop = (e, target) => {
-    e.preventDefault();
-    let src = e.dataTransfer.getData('text/plain');
-    let headers = [...this.state.headers];
-    let srcHdr = headers[src];
-    let trgtHdr = headers[target];
-    let currentIndex = srcHdr.index;
-    srcHdr.index = trgtHdr.index;
-    trgtHdr.index = currentIndex;
-    headers.sort((a, b) => a.index - b.index);
-
-    let newData = this.state.data.map((item)=>{
-      const keysArray = Object.keys(item);
-      let currentTDIndex = keysArray[currentIndex];
-      keysArray[src] = keysArray[target];
-      keysArray[target] = currentTDIndex;
-      /*const newItem = keysArray.reduce((acc, [key, value]) => {
-        acc[key] = value;
-        return acc;
-      }, {});*/
-      //return newItem;
-    });
-
-    this.setState({
-      headers: headers,
-      //data: newData
-    })
-  };
-
   // ### PASS AS PROPS INTO COMPONENT
   render() {
     return (
@@ -255,9 +224,6 @@ class App extends React.Component {
             <DynamicUITable
               headers={this.state.headers}
               data={this.state.data}
-              onDragStart={this.onDragStart}
-              onDragOver={this.onDragOver}
-              onDragDrop={this.onDragDrop}
             />
           </div>
         </main>
