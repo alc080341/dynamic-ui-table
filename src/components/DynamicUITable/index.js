@@ -61,8 +61,7 @@ function CreateTable(props) {
   let data = props.data;
   let isDraggingOver = props.isDraggingOver;
   let dragOverStyle = {
-    border: '2px dashed #ccc',
-    padding: '20px',
+    border: isDraggingOver ? '5px dashed #ccc' : '5px solid transparent',
     backgroundColor: isDraggingOver ? '#f0f0f0' : 'transparent', // Apply background color when dragging over
   }
 
@@ -78,12 +77,12 @@ function CreateTable(props) {
               onDragStart={(e) => onDragStart(e, hdr.index)}
               onDragOver={(e) => onDragOver(e)}
               onDrop={(e) => onDragDrop(e, hdr.index)}
-              index={hdr.index}
-              style={dragOverStyle}
-            >
-              <span draggable>
+              index={hdr.index}            >
+              <span style={dragOverStyle}
+                className="dynamic-table-title" draggable>
                 <strong>{hdr.title}</strong>
               </span>
+              <span>SRCH</span>
             </th>
           ))}
         </tr>
@@ -97,7 +96,6 @@ function CreateTable(props) {
                 <td
                   key={item[hdr.accessor] + "-" + item.index}
                   index={item.index}
-                  style={dragOverStyle}
                 >
                   <span>
                     <p>{item[hdr.accessor]}</p>
