@@ -8,7 +8,7 @@ class App extends React.Component {
 
     // ### SAMPLE DATA
 
-    // ### DEFINE THE HEADERS
+    // ### DEFINE THE HEADERS - INCREMENT INDEX WITH EACH HEADER - START FROM 0
     const headers = [
       {
         title: "Name",

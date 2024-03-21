@@ -6,31 +6,30 @@ export default function DynamicUITable(props) {
   const [headers, updateHeaders] = useState(props.headers || []);
   const [data, updateData] = useState(props.data || []);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [sortCols, setSortColIndex] = useState([]);
+  const [sortCol, setSortColIndex] = useState({
+    colIndex: -1,
+    sortOrder: "asc",
+  });
 
   // ### SORT FUNCTIONS
-  useEffect(() => {
-    // ### SET THE SEARCHES
-    let createdSortCols = [];
-    for (let i in headers) {
-      createdSortCols.push({ colIndex: headers[i].index, sortOrder: "asc" });
-    }
-    setSortColIndex(createdSortCols);
-  }, []);
 
   const sortColumn = (index) => {
     if (headers) {
       const accessor = headers[index].accessor;
-      let descending = false;
-      let newCurrentSortCols = sortCols.map((sc) => {
-        if (sc.colIndex === index) {
-          sc.sortOrder = sc.sortOrder === "asc" ? "desc" : "asc";
-          if (sc.sortOrder === "desc") descending = true;
-        }
-        return sc;
-      });
-
-      setSortColIndex(newCurrentSortCols);
+      let newCurrentSortCol = sortCol;
+      if (newCurrentSortCol.colIndex !== index) {
+        newCurrentSortCol.colIndex = index;
+        newCurrentSortCol.sortOrder = "desc";
+        setSortColIndex(newCurrentSortCol);
+      } else {
+        //newCurrentSortCol.colIndex = index;
+        newCurrentSortCol.sortOrder =
+          newCurrentSortCol.sortOrder === "desc" ? "asc" : "desc";
+        setSortColIndex({
+          sortOrder: newCurrentSortCol.sortOrder,
+          ...newCurrentSortCol,
+        });
+      }
 
       let newData = data.sort((a, b) => {
         let sortVal = 0;
@@ -40,7 +39,7 @@ export default function DynamicUITable(props) {
           sortVal = 1;
         }
 
-        if (descending) {
+        if (newCurrentSortCol.sortOrder === "desc") {
           sortVal = sortVal * -1;
         }
         return sortVal;
@@ -82,8 +81,9 @@ export default function DynamicUITable(props) {
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDragDrop={onDragDrop}
-        isDraggingOver={isDraggingOver}
         sortColumn={sortColumn}
+        isDraggingOver={isDraggingOver}
+        sortCol={sortCol}
       />
     </div>
   );
@@ -103,6 +103,7 @@ function CreateTable(props) {
   let headers = props.headers;
   let data = props.data;
   let isDraggingOver = props.isDraggingOver;
+  let sortCol = props.sortCol;
   let dragOverStyle = {
     border: isDraggingOver ? "5px dashed #ccc" : "5px solid transparent",
     backgroundColor: isDraggingOver ? "#f0f0f0" : "transparent", // Apply background color when dragging over
@@ -113,24 +114,33 @@ function CreateTable(props) {
       <table className="dynamic-ui-table">
         <thead>
           <tr>
-            {headers.map((hdr) => (
-              <th
-                key={hdr.title + "hdr"}
-                onDragStart={(e) => onDragStart(e, hdr.index)}
-                onDragOver={(e) => onDragOver(e)}
-                onDrop={(e) => onDragDrop(e, hdr.index)}
-                index={hdr.index}
-              >
-                <span
-                  style={dragOverStyle}
-                  className="dynamic-table-title"
-                  draggable
+            {headers.map((hdr) => {
+              let sortArrow = "";
+              if (sortCol.colIndex === hdr.index) {
+                sortArrow = "&uarr;";
+              } else sortArrow = "NA";
+
+              return (
+                <th
+                  key={hdr.title + "hdr"}
+                  onDragStart={(e) => onDragStart(e, hdr.index)}
+                  onDragOver={(e) => onDragOver(e)}
+                  onDrop={(e) => onDragDrop(e, hdr.index)}
+                  index={hdr.index}
                 >
-                  <strong>{hdr.title}</strong>
-                </span>
-                <span onClick={() => props.sortColumn(hdr.index)}>SRCH</span>
-              </th>
-            ))}
+                  <span
+                    style={dragOverStyle}
+                    className="dynamic-table-title"
+                    draggable
+                  >
+                    <strong>{hdr.title}</strong>
+                  </span>
+                  <span onClick={() => props.sortColumn(hdr.index)}>
+                    {sortArrow}
+                  </span>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody className="dynamic-ui-table-inner">
