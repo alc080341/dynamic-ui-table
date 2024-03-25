@@ -1,5 +1,5 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "./dynamic-ui-table.css";
 
 export default function DynamicUITable(props) {
@@ -10,6 +10,9 @@ export default function DynamicUITable(props) {
     colIndex: -1,
     sortOrder: "asc",
   });
+  const [noOfPages, setNoOfPages] = useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
+
 
   // ### SORT FUNCTIONS
   const sortColumn = (index) => {
@@ -72,6 +75,10 @@ export default function DynamicUITable(props) {
 
   // ### RENDER TABLE TO UI
   return (
+    <>
+    <Pagination 
+      noOfPages = {noOfPages}
+      currentPage = {currentPage} />
     <div className="dynamic-ui-table-outer">
       <CreateTable
         headers={headers}
@@ -84,6 +91,7 @@ export default function DynamicUITable(props) {
         sortCol={sortCol}
       />
     </div>
+    </>
   );
 }
 
@@ -168,4 +176,43 @@ function CreateTable(props) {
       </table>
     </>
   );
+}
+
+function Pagination(props)
+{
+  let input = useRef();
+  let btns = [];
+  if (props.noOfPages > 1) {
+    for (let i = 1; i < props.noOfPages + 1; i++) {
+      if(props.currentPage === parseInt(i)) btns.push(<span className="page-no-btn active">{i}</span>); 
+      else btns.push(<span className="page-no-btn">{i}</span>);
+    }
+  }
+
+  return (
+    <>
+      <div className="pagination">
+        <span key="page-selector" className="page-selector">
+          Rows per page:
+          <input
+            key="page-input"
+            type="number"
+            min="1"
+            defaultValue={props.noOfPages}
+          />
+        </span>
+        <span>{btns}</span>
+      </div>
+    </>
+  );
+
+  /*
+    <input key="page-input"
+        type="number"
+        min="1"
+        ref={(input)=>this.pageLengthInput = input}
+        defaultValue={this.props.pageLength || 5}
+        onChange={this.onPageLengthChange}
+      />
+/*/
 }
