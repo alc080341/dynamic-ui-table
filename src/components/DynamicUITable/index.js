@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "./dynamic-ui-table.css";
 
 export default function DynamicUITable(props) {
@@ -12,7 +12,6 @@ export default function DynamicUITable(props) {
   });
 
   // ### SORT FUNCTIONS
-
   const sortColumn = (index) => {
     if (headers) {
       const accessor = headers[index].accessor;
@@ -22,7 +21,6 @@ export default function DynamicUITable(props) {
         newCurrentSortCol.sortOrder = "desc";
         setSortColIndex(newCurrentSortCol);
       } else {
-        //newCurrentSortCol.colIndex = index;
         newCurrentSortCol.sortOrder =
           newCurrentSortCol.sortOrder === "desc" ? "asc" : "desc";
         setSortColIndex({
