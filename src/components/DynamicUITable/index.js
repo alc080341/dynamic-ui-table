@@ -117,15 +117,20 @@ function CreateTable(props) {
             {headers.map((hdr) => {
               let sortArrow = "";
               if (sortCol.colIndex === hdr.index) {
-                sortArrow = "&uarr;";
-              } else sortArrow = "NA";
-
+                const arrowType = sortCol.sortOrder === "asc" ? `&#x2191` : `&#x2193`; 
+                const res = new DOMParser().parseFromString(arrowType, 'text/html').body.textContent;
+                sortArrow = res;
+              } else 
+              {
+                sortArrow = "";
+              }
               return (
                 <th
                   key={hdr.title + "hdr"}
                   onDragStart={(e) => onDragStart(e, hdr.index)}
                   onDragOver={(e) => onDragOver(e)}
                   onDrop={(e) => onDragDrop(e, hdr.index)}
+                  onClick={() => props.sortColumn(hdr.index)}
                   index={hdr.index}
                 >
                   <span
@@ -135,7 +140,7 @@ function CreateTable(props) {
                   >
                     <strong>{hdr.title}</strong>
                   </span>
-                  <span onClick={() => props.sortColumn(hdr.index)}>
+                  <span>
                     {sortArrow}
                   </span>
                 </th>
