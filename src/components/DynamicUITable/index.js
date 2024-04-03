@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import "./dynamic-ui-table.css";
 
 export default function DynamicUITable(props) {
@@ -10,8 +10,36 @@ export default function DynamicUITable(props) {
     colIndex: -1,
     sortOrder: "asc",
   });
-  const [noOfPages, setNoOfPages] = useState(5);
+
+  // ### PAGINATION STATE
+  const [noOfRowsPerPage, setNoOfRowsPerPage] = useState(4);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(()=>
+  {
+    let noOfPages = 0;
+    let remaining = data.length % noOfRowsPerPage;
+    if(remaining)
+    {
+      noOfPages += 1;      
+    }
+    noOfPages += data.length / noOfRowsPerPage;
+    return noOfPages;
+  })
+
+  const [pagedData, setPagedData] = useState(() => {
+    let pagedData = [];
+    for (let i = 1; i < data.length; i+=noOfRowsPerPage)
+    {
+      if(i === currentPage)
+      {
+        let startOfRecord = i-1;
+        let endOfRecord = startOfRecord + noOfRowsPerPage;
+        pagedData = data.slice(startOfRecord, endOfRecord);
+        break;
+      }
+    }
+    return pagedData;
+  });
 
 
   // ### SORT FUNCTIONS
@@ -73,16 +101,45 @@ export default function DynamicUITable(props) {
     setIsDraggingOver(false);
   };
 
+  
+  // ### PAGED DATA FUNCTIONS
+  const onSetNoOfRowsPerPage = (val) => {
+    setNoOfRowsPerPage(val);
+  };
+
+  const onSetNewCurrentPage = (val) => {
+    setCurrentPage(val);
+  }
+  
+  const onSetPagedData = () => {
+    let pagedData = [];
+    for (let i = 1; i < data.length; i+=noOfRowsPerPage)
+    {
+      if(i === currentPage)
+      {
+        let startOfRecord = i-1;
+        let endOfRecord = startOfRecord + noOfRowsPerPage;
+        pagedData = data.slice(startOfRecord, endOfRecord);
+        break;
+      }
+    }
+    setPagedData(pagedData);
+  }
+
   // ### RENDER TABLE TO UI
   return (
     <>
     <Pagination 
-      noOfPages = {noOfPages}
-      currentPage = {currentPage} />
+      currentPage = {currentPage} 
+      noOfRowsPerPage = {noOfRowsPerPage}
+      totalPages = {totalPages}
+      onSetNoOfRowsPerPage = {onSetNoOfRowsPerPage}
+      onSetNewCurrentPage = {onSetNewCurrentPage}
+      />
     <div className="dynamic-ui-table-outer">
       <CreateTable
         headers={headers}
-        data={data}
+        data={pagedData}
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDragDrop={onDragDrop}
@@ -180,12 +237,26 @@ function CreateTable(props) {
 
 function Pagination(props)
 {
-  let input = useRef();
+  let noRomsInputRef = useRef();
   let btns = [];
-  if (props.noOfPages > 1) {
-    for (let i = 1; i < props.noOfPages + 1; i++) {
-      if(props.currentPage === parseInt(i)) btns.push(<span className="page-no-btn active">{i}</span>); 
-      else btns.push(<span className="page-no-btn">{i}</span>);
+
+  const onSetNoOfRowsPerPage = () => {
+    props.onSetNoOfRowsPerPage(noRomsInputRef.value);
+  };
+
+  const onSetNewCurrentPage = (newpage) => {
+    props.onSetNewCurrentPage(newpage);
+  };
+
+  // ### CHECK NO OF PAGES / ADD BUTTONS / ALSO ADD ACTIVE PAGE NUMBER
+  if (props.totalPages > 1) {
+    for (let i = 1; i < props.totalPages + 1; i++) {
+      if(props.currentPage === parseInt(i)) btns.push(<span key={i} onClick={() => {
+        onSetNewCurrentPage(i)
+      }} className="page-no-btn active">{i}</span>); 
+      else btns.push(<span  key={i} onClick={() => {
+        onSetNewCurrentPage(i)
+      }} className="page-no-btn">{i}</span>);
     }
   }
 
@@ -198,15 +269,19 @@ function Pagination(props)
             key="page-input"
             type="number"
             min="1"
-            defaultValue={props.noOfPages}
+            defaultValue={props.noOfRowsPerPage}
+            ref={(input)=>noRomsInputRef = input}  
+            onChange={onSetNoOfRowsPerPage}
           />
         </span>
         <span>{btns}</span>
       </div>
     </>
   );
+}
 
-  /*
+
+ /*
     <input key="page-input"
         type="number"
         min="1"
@@ -215,4 +290,3 @@ function Pagination(props)
         onChange={this.onPageLengthChange}
       />
 /*/
-}
