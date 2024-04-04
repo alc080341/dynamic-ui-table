@@ -6,47 +6,32 @@ export default function DynamicUITable(props) {
   const [headers, updateHeaders] = useState(props.headers || []);
   const [data, updateData] = useState(props.data || []);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  // ### DEFAULT SORT STATE
   const [sortCol, setSortColIndex] = useState({
     colIndex: -1,
     sortOrder: "asc",
   });
 
-  // ### PAGINATION STATE
-  const [noOfRowsPerPage, setNoOfRowsPerPage] = useState(4);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(()=>
-  {
-    let noOfPages = 0;
-    let remaining = data.length % noOfRowsPerPage;
-    if(remaining)
-    {
-      noOfPages += 1;      
-    }
-    noOfPages += data.length / noOfRowsPerPage;
-    return noOfPages;
-  })
-
-  const [pagedData, setPagedData] = useState(() => {
-    let pagedData = [];
-    for (let i = 1; i < data.length; i+=noOfRowsPerPage)
-    {
-      if(i === currentPage)
-      {
-        let startOfRecord = i-1;
-        let endOfRecord = startOfRecord + noOfRowsPerPage;
-        pagedData = data.slice(startOfRecord, endOfRecord);
-        break;
-      }
-    }
-    return pagedData;
+  // ### DEFAULT PAGINATION STATE
+  const [paginationState, setPaginationState] = useState({
+    currentPage: 1,
+    noOfRowsPerPage: 5,
+    noOfPages: 0,
+    pagedData: [],
   });
-
+  useEffect(() => {
+    let currentRowsPerPage = paginationState.noOfRowsPerPage ? paginationState.noOfRowsPerPage : 5; 
+    onSetPaginationState(1, currentRowsPerPage);
+  }, [data]);
 
   // ### SORT FUNCTIONS
   const sortColumn = (index) => {
     if (headers) {
       const accessor = headers[index].accessor;
       let newCurrentSortCol = sortCol;
+
+      // ### SET INDEX (COLUMN) OF NEW SORT ORDER / AS WELL AS DIRECTION ASC/DESC
       if (newCurrentSortCol.colIndex !== index) {
         newCurrentSortCol.colIndex = index;
         newCurrentSortCol.sortOrder = "desc";
@@ -60,7 +45,9 @@ export default function DynamicUITable(props) {
         });
       }
 
-      let newData = data.sort((a, b) => {
+      // ### SORT THE DATA ON THE COLUMN
+      let newData = [...data];
+      newData = newData.sort((a, b) => {
         let sortVal = 0;
         if (a[accessor] < b[accessor]) {
           sortVal = -1;
@@ -101,53 +88,56 @@ export default function DynamicUITable(props) {
     setIsDraggingOver(false);
   };
 
-  
   // ### PAGED DATA FUNCTIONS
-  const onSetNoOfRowsPerPage = (val) => {
-    setNoOfRowsPerPage(val);
-  };
-
-  const onSetNewCurrentPage = (val) => {
-    setCurrentPage(val);
-  }
-  
-  const onSetPagedData = () => {
+  const onSetPaginationState = (currentPage, noOfRowsPerPage) => {
     let pagedData = [];
-    for (let i = 1; i < data.length; i+=noOfRowsPerPage)
-    {
-      if(i === currentPage)
-      {
-        let startOfRecord = i-1;
-        let endOfRecord = startOfRecord + noOfRowsPerPage;
+    let newCurrentPage = currentPage
+      ? currentPage
+      : paginationState.currentPage;
+    let newNoOfRowsPerPage = noOfRowsPerPage
+      ? noOfRowsPerPage
+      : paginationState.noOfRowsPerPage;
+    newNoOfRowsPerPage = parseInt(newNoOfRowsPerPage);
+    let newNoOfPages = 0;
+    for (let i = 1; i < data.length; i += newNoOfRowsPerPage) {
+      newNoOfPages++;
+      if (newNoOfPages === newCurrentPage) {
+        let startOfRecord = i - 1;
+        let endOfRecord = startOfRecord + newNoOfRowsPerPage;
         pagedData = data.slice(startOfRecord, endOfRecord);
-        break;
       }
     }
-    setPagedData(pagedData);
-  }
+
+    let newPaginationState = {
+      currentPage: newCurrentPage,
+      noOfPages: newNoOfPages,
+      noOfRowsPerPage: newNoOfRowsPerPage,
+      pagedData: pagedData,
+    };
+    setPaginationState(newPaginationState);
+  };
 
   // ### RENDER TABLE TO UI
   return (
     <>
-    <Pagination 
-      currentPage = {currentPage} 
-      noOfRowsPerPage = {noOfRowsPerPage}
-      totalPages = {totalPages}
-      onSetNoOfRowsPerPage = {onSetNoOfRowsPerPage}
-      onSetNewCurrentPage = {onSetNewCurrentPage}
+      <Pagination
+        currentPage={paginationState.currentPage}
+        noOfRowsPerPage={paginationState.noOfRowsPerPage}
+        noOfPages={paginationState.noOfPages}
+        onSetPaginationState={onSetPaginationState}
       />
-    <div className="dynamic-ui-table-outer">
-      <CreateTable
-        headers={headers}
-        data={pagedData}
-        onDragStart={onDragStart}
-        onDragOver={onDragOver}
-        onDragDrop={onDragDrop}
-        sortColumn={sortColumn}
-        isDraggingOver={isDraggingOver}
-        sortCol={sortCol}
-      />
-    </div>
+      <div className="dynamic-ui-table-outer">
+        <CreateTable
+          headers={headers}
+          data={paginationState.pagedData}
+          onDragStart={onDragStart}
+          onDragOver={onDragOver}
+          onDragDrop={onDragDrop}
+          sortColumn={sortColumn}
+          isDraggingOver={isDraggingOver}
+          sortCol={sortCol}
+        />
+      </div>
     </>
   );
 }
@@ -180,11 +170,14 @@ function CreateTable(props) {
             {headers.map((hdr) => {
               let sortArrow = "";
               if (sortCol.colIndex === hdr.index) {
-                const arrowType = sortCol.sortOrder === "asc" ? `&#x2191` : `&#x2193`; 
-                const res = new DOMParser().parseFromString(arrowType, 'text/html').body.textContent;
+                const arrowType =
+                  sortCol.sortOrder === "asc" ? `&#x2191` : `&#x2193`;
+                const res = new DOMParser().parseFromString(
+                  arrowType,
+                  "text/html"
+                ).body.textContent;
                 sortArrow = res;
-              } else 
-              {
+              } else {
                 sortArrow = "";
               }
               return (
@@ -203,9 +196,7 @@ function CreateTable(props) {
                   >
                     <strong>{hdr.title}</strong>
                   </span>
-                  <span>
-                    {sortArrow}
-                  </span>
+                  <span>{sortArrow}</span>
                 </th>
               );
             })}
@@ -235,28 +226,50 @@ function CreateTable(props) {
   );
 }
 
-function Pagination(props)
-{
-  let noRomsInputRef = useRef();
+function Pagination(props) {
   let btns = [];
 
-  const onSetNoOfRowsPerPage = () => {
-    props.onSetNoOfRowsPerPage(noRomsInputRef.value);
+  const onSetPage = (currentPage) => {
+    props.onSetPaginationState(currentPage);
   };
 
-  const onSetNewCurrentPage = (newpage) => {
-    props.onSetNewCurrentPage(newpage);
+  const onSetRows = (event) => {
+    if (
+      !isNaN(event.target.value) &&
+      event.target.value !== "" &&
+      event.target.value > 0
+    ) {
+      props.onSetPaginationState(1, event.target.value);
+    }
   };
 
   // ### CHECK NO OF PAGES / ADD BUTTONS / ALSO ADD ACTIVE PAGE NUMBER
-  if (props.totalPages > 1) {
-    for (let i = 1; i < props.totalPages + 1; i++) {
-      if(props.currentPage === parseInt(i)) btns.push(<span key={i} onClick={() => {
-        onSetNewCurrentPage(i)
-      }} className="page-no-btn active">{i}</span>); 
-      else btns.push(<span  key={i} onClick={() => {
-        onSetNewCurrentPage(i)
-      }} className="page-no-btn">{i}</span>);
+  if (props.noOfPages > 1) {
+    for (let i = 1; i < props.noOfPages + 1; i++) {
+      if (props.currentPage === parseInt(i))
+        btns.push(
+          <span
+            key={i}
+            onClick={() => {
+              onSetPage(i);
+            }}
+            className="page-no-btn active"
+          >
+            {i}
+          </span>
+        );
+      else
+        btns.push(
+          <span
+            key={i}
+            onClick={() => {
+              onSetPage(i);
+            }}
+            className="page-no-btn"
+          >
+            {i}
+          </span>
+        );
     }
   }
 
@@ -270,8 +283,7 @@ function Pagination(props)
             type="number"
             min="1"
             defaultValue={props.noOfRowsPerPage}
-            ref={(input)=>noRomsInputRef = input}  
-            onChange={onSetNoOfRowsPerPage}
+            onChange={onSetRows}
           />
         </span>
         <span>{btns}</span>
@@ -279,14 +291,3 @@ function Pagination(props)
     </>
   );
 }
-
-
- /*
-    <input key="page-input"
-        type="number"
-        min="1"
-        ref={(input)=>this.pageLengthInput = input}
-        defaultValue={this.props.pageLength || 5}
-        onChange={this.onPageLengthChange}
-      />
-/*/

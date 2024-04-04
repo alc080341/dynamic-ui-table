@@ -212,7 +212,7 @@ class App extends React.Component {
     };
   }
 
-  // ### PASS AS PROPS INTO COMPONENT
+  // ### PASS DATA AS PROPS INTO COMPONENT
   render() {
     return (
       <div className="App">
